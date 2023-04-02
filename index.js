@@ -80,5 +80,24 @@ app.get('/places', async (request, response) => {
     }
 });
 
+//exercicio 5 rota delete criada 
+app.delete('/places/:id', async (request, response) => { 
+    try {
+        const { placeId } = request.params;
+        
+        if(!placeId) {
+            return response.status(404).json({ message: 'Lugar não encontrado no sistema, favor verifique novamente o id inserido.'});
+        }
+        
+        await Place.destroy({ where: { id: placeId }});
+        
+        response.status(200).json({ message: 'Lugar deletado com sucesso do sistema.'});       
+                
+    } catch (error) {
+        console.error(error);
+        response.status(500).json({ message: 'Não foi possivel concluir a operação'});
+    }
+});
+
 //exercicio 1 iniciar o servidor
 app.listen(3333, () => console.log('Aplicação online na porta 3333 🟢'));
