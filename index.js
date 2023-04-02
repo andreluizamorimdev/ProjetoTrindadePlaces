@@ -2,6 +2,7 @@ const express = require('express');
 const connection = require('./src/database');
 const Place = require('./src/models/place');
 const { Sequelize } = require("sequelize");
+const { Op } = require('sequelize');
 
 //exercicio 1 iniciar o servidor
 const app = express();
@@ -83,16 +84,96 @@ app.get('/places', async (request, response) => {
 //exercicio 5 rota delete criada 
 app.delete('/places/:id', async (request, response) => { 
     try {
-        const { placeId } = request.params;
+        const { id } = request.params;
         
-        if(!placeId) {
+        if(!id) {
             return response.status(404).json({ message: 'Lugar não encontrado no sistema, favor verifique novamente o id inserido.'});
         }
         
-        await Place.destroy({ where: { id: placeId }});
+        await Place.destroy({ where: { id: id }});
         
         response.status(200).json({ message: 'Lugar deletado com sucesso do sistema.'});       
                 
+    } catch (error) {
+        console.error(error);
+        response.status(500).json({ message: 'Não foi possivel concluir a operação'});
+    }
+});
+
+//exercicio 6 rota update criada
+app.put('/places/:id', async (request, response) => {
+    try {
+        const { id } = request.params;
+        const {
+            name,
+            contact,
+            opening_hours,
+            description,
+            latitude,
+            longitude
+        } = request.body;
+        
+        const place = await Place.findByPk(id);
+
+        if (!place) {
+            return response.status(404).json({ message: 'Instituição não encontrada.' });
+        }
+
+        place.name = name;
+        place.contact = contact;
+        place.opening_hours = opening_hours;
+        place.description = description;
+        place.latitude = latitude;
+        place.longitude = longitude;
+
+        if (typeof place.name !== "string" || place.name.trim() === "") {
+            return response.status(400).json({ message: "Nome é obrigatório" });
+        }
+
+        if (typeof place.contact !== "string" || place.contact.trim() === "") {
+            return response.status(400).json({ message: "Contato não pode estar estar vazio" });
+        }
+
+        if (typeof place.opening_hours !== "string" || place.opening_hours.trim() === "") {
+            return response.status(400).json({ message: "Horário de funcionamento não pode estar vazio" });
+        }
+
+        if (typeof place.description !== "string" || place.description.trim() === "") {
+            return response.status(400).json({ message: "Descrição não pode estar vazia" });
+        }
+
+        if (typeof place.latitude !== "number" || isNaN(place.latitude)) {
+            return response.status(400).json({ message: "Latitude deve ser um número" });
+        }
+
+        if (typeof place.longitude !== "number" || isNaN(place.longitude)) {
+            return response.status(400).json({ message: "Longitude deve ser um número" });
+        }
+
+        const placeAlreadyExists = await Place.findOne({
+            where: {
+                [Op.and]: [
+                    Sequelize.where(
+                        Sequelize.fn('lower', Sequelize.col('name')),
+                        Sequelize.fn('lower', place.name)
+                    ),
+                    {
+                        id: {
+                            [Op.ne]: id
+                        }
+                    }
+                ]
+            }
+        });
+          
+          if (placeAlreadyExists) {
+            return response.status(409).json({ message: 'Já existe um lugar com esse nome na base de dados.' });
+          }
+
+        const updatedPlace = await place.save();
+
+        response.json(updatedPlace);
+        
     } catch (error) {
         console.error(error);
         response.status(500).json({ message: 'Não foi possivel concluir a operação'});
