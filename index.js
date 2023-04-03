@@ -126,22 +126,6 @@ app.put('/places/:id', async (request, response) => {
         place.latitude = latitude;
         place.longitude = longitude;
 
-        if (typeof place.name !== "string" || place.name.trim() === "") {
-            return response.status(400).json({ message: "Nome é obrigatório" });
-        }
-
-        if (typeof place.contact !== "string" || place.contact.trim() === "") {
-            return response.status(400).json({ message: "Contato não pode estar estar vazio" });
-        }
-
-        if (typeof place.opening_hours !== "string" || place.opening_hours.trim() === "") {
-            return response.status(400).json({ message: "Horário de funcionamento não pode estar vazio" });
-        }
-
-        if (typeof place.description !== "string" || place.description.trim() === "") {
-            return response.status(400).json({ message: "Descrição não pode estar vazia" });
-        }
-
         if (typeof place.latitude !== "number" || isNaN(place.latitude)) {
             return response.status(400).json({ message: "Latitude deve ser um número" });
         }
@@ -149,26 +133,6 @@ app.put('/places/:id', async (request, response) => {
         if (typeof place.longitude !== "number" || isNaN(place.longitude)) {
             return response.status(400).json({ message: "Longitude deve ser um número" });
         }
-
-        const placeAlreadyExists = await Place.findOne({
-            where: {
-                [Op.and]: [
-                    Sequelize.where(
-                        Sequelize.fn('lower', Sequelize.col('name')),
-                        Sequelize.fn('lower', place.name)
-                    ),
-                    {
-                        id: {
-                            [Op.ne]: id
-                        }
-                    }
-                ]
-            }
-        });
-          
-          if (placeAlreadyExists) {
-            return response.status(409).json({ message: 'Já existe um lugar com esse nome na base de dados.' });
-          }
 
         const updatedPlace = await place.save();
 
