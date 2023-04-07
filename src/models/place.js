@@ -1,5 +1,6 @@
 const { Sequelize } = require("sequelize");
 const connection = require("../database");
+const User = require("./user");
 
 //exercicio 2 Model Place criado
 const Place = connection.define('place', {
@@ -26,7 +27,17 @@ const Place = connection.define('place', {
     },
     longitude: {
         type: Sequelize.DECIMAL
+    },
+    userId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'users',
+            key: 'id'
+        }
     }
 });
+
+Place.belongsTo(User);
 
 module.exports = Place;
