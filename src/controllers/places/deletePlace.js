@@ -3,8 +3,8 @@ const Place = require("../../models/place");
 async function deletePlace (request, response) { 
     try {
         const { id } = request.params;
-        
-        if(!id) {
+        const placeInDatabase = await Place.findByPk(id);
+        if(!placeInDatabase) {
             return response.status(404).json({ message: 'Lugar não encontrado no sistema, favor verifique novamente o id inserido.'});
         }
         
